@@ -16,9 +16,7 @@ A modern FastAPI application that helps people meet in public places across Germ
 
 ```bash
 # Start the server
-./run.sh start
 
-# Or manually:
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
@@ -34,22 +32,7 @@ Email: max.mueller@example.com
 Password: password123
 ```
 
-## 📖 Documentation
 
-- **API Docs**: See `API_DOCUMENTATION.md` for complete API reference
-- **Setup Guide**: See `SETUP_COMPLETE.md` for detailed setup info
-- **Mock Data**: See `mock_data/README.md` for data information
-
-## 🛠️ Helper Commands
-
-```bash
-./run.sh start    # Start the server
-./run.sh seed     # Seed database with mock data
-./run.sh test     # Run API tests
-./run.sh stats    # Show database statistics
-./run.sh clean    # Delete database
-./run.sh docs     # Show documentation URLs
-```
 
 ## 🧪 Testing
 
@@ -211,51 +194,6 @@ curl -X POST http://localhost:8001/api/v1/checkins/ \
 MIT
 
 
-# 🎉 Zutreffen FastAPI Project - Complete Setup
-
-## ✅ What Has Been Created
-
-### 1. **Project Structure**
-```
-zutreffen/
-├── app/
-│   ├── api/
-│   │   └── v1/
-│   │       ├── routes/
-│   │       │   ├── health.py      # Health check endpoint
-│   │       │   ├── users.py       # User management
-│   │       │   ├── places.py      # Places CRUD
-│   │       │   └── checkins.py    # Check-in management
-│   │       └── api.py             # API router configuration
-│   ├── core/
-│   │   ├── config.py              # Settings and configuration
-│   │   └── security.py            # Password hashing, JWT
-│   ├── db/
-│   │   └── session.py             # Database session management
-│   ├── models/
-│   │   ├── user.py                # User ORM model
-│   │   ├── place.py               # Place ORM model
-│   │   └── checkin.py             # CheckIn ORM model
-│   ├── schemas/
-│   │   ├── user.py                # User Pydantic schemas
-│   │   ├── place.py               # Place Pydantic schemas
-│   │   └── checkin.py             # CheckIn Pydantic schemas
-│   └── main.py                    # FastAPI application entry
-├── mock_data/
-│   ├── users.py                   # 10 German users with avatars
-│   ├── places.py                  # 21 real German places
-│   ├── checkins.py                # Check-in generator
-│   ├── seed_database.py           # Database seeding script
-│   └── README.md                  # Mock data documentation
-├── tests/
-│   └── test_health.py             # Basic health check test
-├── requirements.txt               # Python dependencies
-├── README.md                      # Project documentation
-├── .env                           # Environment variables
-├── test_api.py                    # API testing script
-└── zutreffen.db                   # SQLite database (60KB)
-```
-
 ### 2. **Database Models**
 
 #### User Model
@@ -278,111 +216,7 @@ zutreffen/
 - `message`, `check_in_time`, `check_out_time`
 - Relationships with user and place
 
-### 3. **Mock Data (Already Seeded!)**
 
-#### 📊 Database Contents:
-- **10 Users** - German names, professional bios, avatars
-- **21 Places** - Across 7 German cities
-- **30 Check-ins** - 21 active, 9 ended
-
-#### 🏙️ Cities Covered:
-- **Berlin** (3 places)
-- **Munich** (3 places)
-- **Hamburg** (3 places)
-- **Frankfurt** (3 places)
-- **Cologne** (3 places)
-- **Stuttgart** (3 places)
-- **Düsseldorf** (3 places)
-
-#### 🗺️ Real Coordinates:
-All places have real GPS coordinates from actual German locations.
-
-#### 🖼️ Images:
-- User avatars: `pravatar.cc` (realistic profile pictures)
-- Place images: Unsplash (high-quality venue photos)
-
-### 4. **API Endpoints (All Working!)**
-
-#### Health Check
-```
-GET /api/v1/health
-```
-
-#### Users
-```
-GET  /api/v1/users/              # List all users
-GET  /api/v1/users/{user_id}     # Get specific user
-POST /api/v1/users/              # Create new user
-```
-
-#### Places
-```
-GET /api/v1/places/              # List all places
-GET /api/v1/places/?city=Berlin  # Filter by city
-GET /api/v1/places/?category=cafe # Filter by category
-GET /api/v1/places/{place_id}    # Get specific place
-```
-
-#### Check-ins
-```
-GET /api/v1/checkins/            # List active check-ins
-GET /api/v1/checkins/?active_only=false  # All check-ins
-GET /api/v1/checkins/{checkin_id}        # Specific check-in
-```
-
-## 🚀 Quick Start
-
-### Start the Server
-```bash
-cd /home/ahmad/projects/zutreffen
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
-```
-
-### Test the API
-```bash
-python3 test_api.py
-```
-
-### Access Documentation
-- **Swagger UI**: http://localhost:8001/docs
-- **ReDoc**: http://localhost:8001/redoc
-- **Root**: http://localhost:8001/
-
-## 🧪 Test Credentials
-
-```
-Email: max.mueller@example.com
-Password: password123
-```
-
-All users use `password123` for testing.
-
-## 📝 Example API Calls
-
-### Get All Places
-```bash
-curl http://localhost:8001/api/v1/places/
-```
-
-### Get Berlin Places Only
-```bash
-curl http://localhost:8001/api/v1/places/?city=Berlin
-```
-
-### Get Cafes Only
-```bash
-curl http://localhost:8001/api/v1/places/?category=cafe
-```
-
-### Get Active Check-ins
-```bash
-curl http://localhost:8001/api/v1/checkins/
-```
-
-### Get All Users
-```bash
-curl http://localhost:8001/api/v1/users/
-```
 
 ## 🔄 Re-seed Database
 
@@ -426,81 +260,7 @@ This will:
 ✅ Password hashing  
 ✅ CORS middleware  
 
-## 🚧 Next Steps (Optional)
 
-1. **Authentication System**
-   - JWT token generation
-   - Login/logout endpoints
-   - Protected routes
-
-2. **Full CRUD Operations**
-   - Create places
-   - Update places
-   - Delete places
-   - Create check-ins
-   - End check-ins
-
-3. **Advanced Features**
-   - Geolocation search (nearby places)
-   - User profiles
-   - Place ratings and reviews
-   - Real-time notifications
-   - Payment integration
-
-4. **Frontend**
-   - React/Vue web app
-   - Mobile app (React Native/Flutter)
-
-5. **Production Ready**
-   - PostgreSQL migration
-   - Docker containerization
-   - CI/CD pipeline
-   - Alembic migrations
-   - Unit and integration tests
-
-## 📊 Database Stats
-
-- **Database Size**: 60KB
-- **Users**: 10
-- **Places**: 21
-- **Check-ins**: 30 (21 active, 9 ended)
-
-## 🌐 Sample Data Examples
-
-### Example User
-```json
-{
-  "email": "max.mueller@example.com",
-  "username": "maxm",
-  "full_name": "Max Müller",
-  "avatar_url": "https://i.pravatar.cc/150?img=12",
-  "bio": "Coffee enthusiast ☕ | Berlin explorer | Always up for a chat"
-}
-```
-
-### Example Place
-```json
-{
-  "name": "Café Einstein Stammhaus",
-  "city": "Berlin",
-  "postal_code": "10785",
-  "latitude": 52.5065,
-  "longitude": 13.3657,
-  "category": "cafe",
-  "image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800"
-}
-```
-
-### Example Check-in
-```json
-{
-  "user_id": 3,
-  "place_id": 4,
-  "status": "active",
-  "message": "Working on my laptop, feel free to join!",
-  "check_in_time": "2025-11-03T14:30:00Z"
-}
-```
 
 ## 🎉 Success!
 
