@@ -1,0 +1,337 @@
+<!DOCTYPE html><!DOCTYPE html>
+
+<html lang="en"><html lang="en">
+
+<head><head>
+
+    <meta charset="UTF-8">    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Zutreffen - Meet in Public Places</title>    <title>Zutreffen - Meet People in Public Places</title>
+
+    <link rel="stylesheet" href="/static/style.css">    <link rel="stylesheet" href="style.css">
+
+</head></head>
+
+<body><body>
+
+    <div id="app">    <!-- Navigation -->
+
+        <!-- Auth Section (Login/Signup) -->    <nav class="navbar">
+
+        <div id="authSection" class="auth-container">        <div class="container">
+
+            <div class="auth-box">            <div class="nav-brand">
+
+                <h1>🎯 Zutreffen</h1>                <h1>🎯 Zutreffen</h1>
+
+                <p class="subtitle">Meet in Public Places</p>                <p class="tagline">Meet people in public places</p>
+
+                            </div>
+
+                <div class="tabs">            <div class="nav-menu" id="navMenu">
+
+                    <button class="tab active" onclick="showLoginForm()">Login</button>                <a href="#" class="nav-link" onclick="showSection('places')">Places</a>
+
+                    <button class="tab" onclick="showSignupForm()">Sign Up</button>                <a href="#" class="nav-link" onclick="showSection('checkins')">Check-ins</a>
+
+                </div>                <a href="#" class="nav-link" id="userMenuBtn" style="display: none;" onclick="toggleUserMenu()">
+
+                    <img id="userAvatar" src="" class="user-avatar-small">
+
+                <!-- Login Form -->                    <span id="userName"></span>
+
+                <form id="loginForm" class="auth-form">                </a>
+
+                    <input type="email" id="loginEmail" placeholder="Email" required>                <button class="btn btn-primary" id="loginBtn" onclick="showLoginModal()">Login</button>
+
+                    <input type="password" id="loginPassword" placeholder="Password" required>                <button class="btn btn-secondary" id="logoutBtn" style="display: none;" onclick="logout()">Logout</button>
+
+                    <button type="submit">Login</button>            </div>
+
+                    <p class="hint">Try: max.mueller@example.com / password123</p>        </div>
+
+                </form>    </nav>
+
+
+
+                <!-- Signup Form -->    <!-- Main Content -->
+
+                <form id="signupForm" class="auth-form" style="display: none;">    <main class="container main-content">
+
+                    <input type="text" id="signupUsername" placeholder="Username" required>        <!-- Welcome Section (shown when not logged in) -->
+
+                    <input type="email" id="signupEmail" placeholder="Email" required>        <section id="welcomeSection" class="welcome-section">
+
+                    <input type="text" id="signupFullName" placeholder="Full Name" required>            <div class="hero">
+
+                    <input type="password" id="signupPassword" placeholder="Password" required>                <h2>Welcome to Zutreffen!</h2>
+
+                    <button type="submit">Sign Up</button>                <p>Discover and meet people in cafés, coworking spaces, and parks across Germany.</p>
+
+                </form>                <div class="hero-buttons">
+
+                    <button class="btn btn-large btn-primary" onclick="showLoginModal()">Get Started</button>
+
+                <div id="authMessage" class="message"></div>                    <button class="btn btn-large btn-outline" onclick="showSection('places')">Browse Places</button>
+
+            </div>                </div>
+
+        </div>            </div>
+
+        </section>
+
+        <!-- Main App Section (After Login) -->
+
+        <div id="mainSection" style="display: none;">        <!-- Places Section -->
+
+            <!-- Header -->        <section id="placesSection" style="display: none;">
+
+            <header>            <div class="section-header">
+
+                <div class="container">                <h2>📍 Places</h2>
+
+                    <h1>🎯 Zutreffen</h1>                <div class="filters">
+
+                    <div class="user-info">                    <select id="cityFilter" onchange="loadPlaces()">
+
+                        <span id="userName">User</span>                        <option value="">All Cities</option>
+
+                        <button onclick="logout()">Logout</button>                        <option value="Berlin">Berlin</option>
+
+                    </div>                        <option value="Munich">Munich</option>
+
+                </div>                        <option value="Hamburg">Hamburg</option>
+
+            </header>                        <option value="Frankfurt">Frankfurt</option>
+
+                        <option value="Cologne">Cologne</option>
+
+            <!-- Navigation -->                        <option value="Stuttgart">Stuttgart</option>
+
+            <nav>                        <option value="Düsseldorf">Düsseldorf</option>
+
+                <div class="container">                    </select>
+
+                    <button class="nav-btn active" onclick="showTab('places')">📍 Places</button>                    <select id="categoryFilter" onchange="loadPlaces()">
+
+                    <button class="nav-btn" onclick="showTab('checkins')">✅ Check-ins</button>                        <option value="">All Categories</option>
+
+                    <button class="nav-btn" onclick="showTab('users')">👥 Users</button>                        <option value="cafe">☕ Café</option>
+
+                </div>                        <option value="coworking">💼 Coworking</option>
+
+            </nav>                        <option value="park">🌳 Park</option>
+
+                    </select>
+
+            <!-- Content Area -->                </div>
+
+            <main class="container">            </div>
+
+                <!-- Places Tab -->            <div id="placesList" class="grid"></div>
+
+                <div id="placesTab" class="tab-content">        </section>
+
+                    <div class="section-header">
+
+                        <h2>Places</h2>        <!-- Check-ins Section -->
+
+                        <button onclick="showCreatePlaceForm()">+ Add Place</button>        <section id="checkinsSection" style="display: none;">
+
+                    </div>            <div class="section-header">
+
+                <h2>✅ Active Check-ins</h2>
+
+                    <!-- Filters -->                <button class="btn btn-primary" id="myCheckinsBtn" style="display: none;" onclick="showMyCheckins()">My Check-ins</button>
+
+                    <div class="filters">            </div>
+
+                        <select id="cityFilter" onchange="loadPlaces()">            <div id="checkinsList" class="checkins-list"></div>
+
+                            <option value="">All Cities</option>        </section>
+
+                            <option value="Berlin">Berlin</option>
+
+                            <option value="Munich">Munich</option>        <!-- My Profile Section -->
+
+                            <option value="Hamburg">Hamburg</option>        <section id="profileSection" style="display: none;">
+
+                            <option value="Frankfurt">Frankfurt</option>            <div class="section-header">
+
+                            <option value="Cologne">Cologne</option>                <h2>👤 My Profile</h2>
+
+                            <option value="Stuttgart">Stuttgart</option>            </div>
+
+                            <option value="Düsseldorf">Düsseldorf</option>            <div id="profileContent"></div>
+
+                        </select>        </section>
+
+                        <select id="categoryFilter" onchange="loadPlaces()">    </main>
+
+                            <option value="">All Categories</option>
+
+                            <option value="cafe">Cafe</option>    <!-- Login/Register Modal -->
+
+                            <option value="coworking">Coworking</option>    <div id="authModal" class="modal">
+
+                            <option value="park">Park</option>        <div class="modal-content">
+
+                            <option value="restaurant">Restaurant</option>            <span class="close" onclick="closeAuthModal()">&times;</span>
+
+                            <option value="library">Library</option>            
+
+                        </select>            <!-- Login Form -->
+
+                    </div>            <div id="loginForm" class="auth-form">
+
+                <h2>Login</h2>
+
+                    <!-- Create Place Form (Hidden by default) -->                <form onsubmit="handleLogin(event)">
+
+                    <div id="createPlaceForm" style="display: none;" class="form-card">                    <div class="form-group">
+
+                        <h3>Add New Place</h3>                        <label>Email</label>
+
+                        <form onsubmit="createPlace(event)">                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+
+                            <input type="text" id="placeName" placeholder="Place Name" required>                    </div>
+
+                            <input type="text" id="placeAddress" placeholder="Address" required>                    <div class="form-group">
+
+                            <input type="text" id="placeCity" placeholder="City" required>                        <label>Password</label>
+
+                            <input type="text" id="placePostalCode" placeholder="Postal Code" required>                        <input type="password" id="loginPassword" required>
+
+                            <input type="number" step="0.000001" id="placeLatitude" placeholder="Latitude" required>                    </div>
+
+                            <input type="number" step="0.000001" id="placeLongitude" placeholder="Longitude" required>                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+
+                            <select id="placeCategory" required>                </form>
+
+                                <option value="">Select Category</option>                <p class="form-footer">
+
+                                <option value="cafe">Cafe</option>                    Don't have an account? 
+
+                                <option value="coworking">Coworking</option>                    <a href="#" onclick="switchToRegister()">Register here</a>
+
+                                <option value="park">Park</option>                </p>
+
+                                <option value="restaurant">Restaurant</option>                <p class="form-hint">
+
+                                <option value="library">Library</option>                    💡 Try: max.mueller@example.com / password123
+
+                            </select>                </p>
+
+                            <input type="url" id="placeImage" placeholder="Image URL (optional)">            </div>
+
+                            <div class="form-actions">
+
+                                <button type="submit">Create</button>            <!-- Register Form -->
+
+                                <button type="button" onclick="hideCreatePlaceForm()">Cancel</button>            <div id="registerForm" class="auth-form" style="display: none;">
+
+                            </div>                <h2>Register</h2>
+
+                        </form>                <form onsubmit="handleRegister(event)">
+
+                    </div>                    <div class="form-group">
+
+                        <label>Email</label>
+
+                    <!-- Places List -->                        <input type="email" id="registerEmail" required>
+
+                    <div id="placesList" class="grid"></div>                    </div>
+
+                </div>                    <div class="form-group">
+
+                        <label>Password</label>
+
+                <!-- Check-ins Tab -->                        <input type="password" id="registerPassword" required minlength="6">
+
+                <div id="checkinsTab" class="tab-content" style="display: none;">                    </div>
+
+                    <div class="section-header">                    <div class="form-group">
+
+                        <h2>Check-ins</h2>                        <label>Username (optional)</label>
+
+                        <button onclick="showCreateCheckinForm()">+ New Check-in</button>                        <input type="text" id="registerUsername">
+
+                    </div>                    </div>
+
+                    <div class="form-group">
+
+                    <!-- Create Check-in Form -->                        <label>Full Name (optional)</label>
+
+                    <div id="createCheckinForm" style="display: none;" class="form-card">                        <input type="text" id="registerFullName">
+
+                        <h3>New Check-in</h3>                    </div>
+
+                        <form onsubmit="createCheckin(event)">                    <button type="submit" class="btn btn-primary btn-block">Register</button>
+
+                            <select id="checkinPlaceId" required>                </form>
+
+                                <option value="">Select Place</option>                <p class="form-footer">
+
+                            </select>                    Already have an account? 
+
+                            <select id="checkinStatus" required>                    <a href="#" onclick="switchToLogin()">Login here</a>
+
+                                <option value="available">Available</option>                </p>
+
+                                <option value="busy">Busy</option>            </div>
+
+                                <option value="looking_for_company">Looking for Company</option>        </div>
+
+                            </select>    </div>
+
+                            <div class="form-actions">
+
+                                <button type="submit">Check In</button>    <!-- Check-in Modal -->
+
+                                <button type="button" onclick="hideCreateCheckinForm()">Cancel</button>    <div id="checkinModal" class="modal">
+
+                            </div>        <div class="modal-content">
+
+                        </form>            <span class="close" onclick="closeCheckinModal()">&times;</span>
+
+                    </div>            <h2>Check in to <span id="checkinPlaceName"></span></h2>
+
+            <form onsubmit="handleCheckin(event)">
+
+                    <!-- Check-ins List -->                <div class="form-group">
+
+                    <div id="checkinsList" class="list"></div>                    <label>Message (optional)</label>
+
+                </div>                    <textarea id="checkinMessage" rows="3" placeholder="Let people know what you're doing..."></textarea>
+
+                </div>
+
+                <!-- Users Tab -->                <button type="submit" class="btn btn-primary btn-block">Check In</button>
+
+                <div id="usersTab" class="tab-content" style="display: none;">            </form>
+
+                    <div class="section-header">        </div>
+
+                        <h2>Users</h2>    </div>
+
+                    </div>
+
+                    <div id="usersList" class="grid"></div>    <!-- Toast Notification -->
+
+                </div>    <div id="toast" class="toast"></div>
+
+            </main>
+
+        </div>    <script src="app.js"></script>
+
+    </div></body>
+
+</html>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

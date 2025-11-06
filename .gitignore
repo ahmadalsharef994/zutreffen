@@ -1,0 +1,120 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-wheel-metadata/
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+venv.bak/
+venv3/
+venv2/
+.python-version
+pyvenv.cfg
+
+# Environment / secrets
+.env
+.env.*
+.env.local
+.env.*.local
+secrets.json
+*.pem
+*.key
+*.crt
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Pytest / test / coverage
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Logs and runtime files
+*.log
+logs/
+*.out
+*.pid
+*.sock
+gunicorn.pid
+uvicorn.log
+
+# Databases
+*.sqlite3
+*.db
+*.db-journal
+
+# Static / uploads / build artifacts
+staticfiles/
+static/dist/
+dist/
+build/
+uploads/
+media/
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Documentation build
+docs/_build/
+build/
+
+# Sphinx doctrees
+*.doctree
+
+# Jupyter
+.ipynb_checkpoints
+
+# Coverage / profiling / caches
+profiler/
+*.prof
+
+# OS generated files
+Icon?
+ehthumbs.db
+
+# Misc
+pip-log.txt
+pip-delete-this-directory.txt
+celerybeat-schedule
+celerybeat.pid
+.vagrant/
