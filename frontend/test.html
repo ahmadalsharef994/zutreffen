@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test - Zutreffen</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        button { padding: 10px 15px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Zutreffen API Test</h1>
+    <p>Use this page to test if the API is working without browser extension interference.</p>
+    
+    <div>
+        <button onclick="testHealth()">Test Health Check</button>
+        <button onclick="testLogin()">Test Login (max.mueller@example.com)</button>
+        <button onclick="testPlaces()">Test Places</button>
+        <button onclick="testUsers()">Test Users</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001/api/v1';
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(title, data, isSuccess = true) {
+            const div = document.createElement('div');
+            div.className = `result ${isSuccess ? 'success' : 'error'}`;
+            div.innerHTML = `<h3>${title}</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health/`);
+                const data = await response.json();
+                addResult('✅ Health Check', data, true);
+            } catch (error) {
+                addResult('❌ Health Check Failed', { error: error.message }, false);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'max.mueller@example.com',
+                        password: 'password123'
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    addResult('✅ Login Success', data, true);
+                    // Store token for other tests
+                    window.testToken = data.access_token;
+                } else {
+                    addResult('❌ Login Failed', data, false);
+                }
+            } catch (error) {
+                addResult('❌ Login Error', { error: error.message }, false);
+            }
+        }
+
+        async function testPlaces() {
+            try {
+                const response = await fetch(`${API_BASE}/places/`);
+                const data = await response.json();
+                addResult('✅ Places', { count: data.length, sample: data.slice(0, 2) }, true);
+            } catch (error) {
+                addResult('❌ Places Failed', { error: error.message }, false);
+            }
+        }
+
+        async function testUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users/`);
+                const data = await response.json();
+                addResult('✅ Users', { count: data.length, sample: data.slice(0, 2) }, true);
+            } catch (error) {
+                addResult('❌ Users Failed', { error: error.message }, false);
+            }
+        }
+
+        // Auto-run health check
+        setTimeout(testHealth, 500);
+    </script>
+</body>
+</html>

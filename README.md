@@ -21,9 +21,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 **Access the app:**
-- API: http://localhost:8001
-- Swagger UI: http://localhost:8001/docs
-- ReDoc: http://localhost:8001/redoc
+- 🌐 **Web Interface**: http://localhost:8001
+- 🧪 **API Test Page**: http://localhost:8001/static/test.html
+- 📚 **API Docs**: http://localhost:8001/docs
+- 📖 **ReDoc**: http://localhost:8001/redoc
 
 ## 🔑 Test Login
 
@@ -31,6 +32,20 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 Email: max.mueller@example.com
 Password: password123
 ```
+
+## 🌐 Web Interface
+
+A complete web interface is available at the root URL with features:
+- 🔐 User registration and login
+- 📍 Browse and create places
+- ✅ Check-in and check-out functionality  
+- 👤 User profile management
+- 📊 Dashboard with statistics
+
+**Troubleshooting**: If you get `net::ERR_BLOCKED_BY_CLIENT` errors:
+1. Open in **Incognito Mode** (Ctrl+Shift+N)
+2. Disable ad blockers/privacy extensions temporarily
+3. Use the test page: http://localhost:8001/static/test.html
 
 
 
