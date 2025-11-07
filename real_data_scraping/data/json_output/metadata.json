@@ -1,0 +1,26 @@
+{
+  "total_places": 14882,
+  "cities": 2,
+  "categories": 14,
+  "generated_at": "2025-11-07T13:19:34.497046",
+  "places_by_city": {
+    "Marburg": 1006,
+    "Berlin": 13876
+  },
+  "places_by_category": {
+    "cafe": 2578,
+    "restaurant": 4916,
+    "bar": 2044,
+    "fast_food": 2790,
+    "hotel_lobby": 688,
+    "library": 224,
+    "university_cafe": 156,
+    "service_station": 347,
+    "gym_cafe": 15,
+    "hospital_cafe": 59,
+    "community_centre": 944,
+    "coworking": 31,
+    "cinema_lobby": 88,
+    "spa_lounge": 2
+  }
+}
