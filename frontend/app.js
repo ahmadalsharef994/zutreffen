@@ -259,6 +259,9 @@ async function loadDashboardData() {
             }
         }
 
+        // Load people nearby
+        await loadPeopleNearby(places);
+
         // Update recent checkins
         const recentCheckinsContainer = document.getElementById('recent-checkins');
         recentCheckinsContainer.innerHTML = '';
@@ -277,6 +280,98 @@ async function loadDashboardData() {
     }
 
     hideLoading();
+}
+
+async function loadPeopleNearby(places) {
+    const container = document.getElementById('people-nearby-list');
+    container.innerHTML = '<p style="color: #999;">Loading people nearby...</p>';
+    
+    try {
+        // Get all active checkins
+        const checkins = await apiRequest('/checkins/?active_only=true&limit=50');
+        
+        if (checkins.length === 0) {
+            container.innerHTML = '<p style="color: #999;">No one is checked in right now. Be the first! 🎉</p>';
+            return;
+        }
+        
+        // Get user and place info for each checkin
+        const peopleData = [];
+        for (const checkin of checkins.slice(0, 12)) { // Limit to 12 people
+            try {
+                const [user, place] = await Promise.all([
+                    apiRequest(`/users/${checkin.user_id}`),
+                    apiRequest(`/places/${checkin.place_id}`)
+                ]);
+                
+                // Calculate time remaining
+                const checkinTime = new Date(checkin.check_in_time);
+                const endTime = new Date(checkinTime.getTime() + checkin.duration_hours * 60 * 60 * 1000);
+                const now = new Date();
+                const timeLeft = endTime - now;
+                const hoursLeft = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
+                const minutesLeft = Math.max(0, Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)));
+                
+                if (timeLeft > 0) {
+                    peopleData.push({
+                        user,
+                        place,
+                        checkin,
+                        hoursLeft,
+                        minutesLeft
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load person data:', error);
+            }
+        }
+        
+        if (peopleData.length === 0) {
+            container.innerHTML = '<p style="color: #999;">No active users nearby right now.</p>';
+            return;
+        }
+        
+        container.innerHTML = peopleData.map(data => {
+            const { user, place, checkin, hoursLeft, minutesLeft } = data;
+            const timeLeftStr = hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`;
+            const languages = user.languages && user.languages.length > 0 
+                ? user.languages.join(', ') 
+                : '';
+            const interests = user.interests && user.interests.length > 0 
+                ? user.interests.join(', ') 
+                : '';
+            
+            return `
+                <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                        <div>
+                            <h4 style="margin: 0; color: #333; font-size: 1rem;">${user.full_name || user.username || 'Anonymous'}</h4>
+                            ${user.why_here ? `<span style="font-size: 0.75rem; color: #888;">📍 ${user.why_here}</span>` : ''}
+                        </div>
+                        <span style="background: #ff6b6b; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">⏱ ${timeLeftStr}</span>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.75rem;">
+                        <div style="font-size: 0.85rem; color: #555;">
+                            <strong>📍 ${place.name}</strong>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #888;">${place.city}</div>
+                    </div>
+                    
+                    ${user.bio ? `<p style="font-size: 0.85rem; color: #666; margin: 0.5rem 0;">${user.bio}</p>` : ''}
+                    
+                    ${languages ? `<div style="font-size: 0.75rem; color: #888; margin-top: 0.5rem;">🗣️ ${languages}</div>` : ''}
+                    ${interests ? `<div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">💡 ${interests}</div>` : ''}
+                    
+                    ${checkin.message ? `<p style="font-size: 0.85rem; color: #4a90e2; margin-top: 0.75rem; padding: 0.5rem; background: #e3f2fd; border-radius: 4px; font-style: italic;">"${checkin.message}"</p>` : ''}
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Failed to load people nearby:', error);
+        container.innerHTML = '<p style="color: #999;">Failed to load people nearby.</p>';
+    }
 }
 
 // Places Functions
@@ -601,20 +696,22 @@ async function checkinToPlace(event) {
     
     const placeId = document.getElementById('checkin-place-id').value;
     const message = document.getElementById('checkin-message').value;
+    const duration = parseInt(document.getElementById('checkin-duration').value);
     
     const checkinData = {
         place_id: parseInt(placeId),
-        message: message || null
+        message: message || null,
+        duration_hours: duration
     };
 
     try {
         showLoading();
-        await apiRequest('/checkins', {
+        await apiRequest('/checkins/', {
             method: 'POST',
             body: JSON.stringify(checkinData)
         });
         
-        showToast('Check-in successful!', 'success');
+        showToast(`Check-in successful! You're here for ${duration} hour${duration > 1 ? 's' : ''} 🎉`, 'success');
         closeModal('checkin-modal');
         
         // Refresh data if on relevant sections
@@ -622,6 +719,8 @@ async function checkinToPlace(event) {
             loadCheckins('all');
         } else if (currentSection === 'dashboard') {
             loadDashboardData();
+        } else if (currentSection === 'places') {
+            loadPlaces();
         }
         
         // Reset form
@@ -690,18 +789,112 @@ async function deleteCheckin(checkinId) {
 }
 
 // Profile Functions
+let userLanguages = [];
+let userInterests = [];
+
 async function loadUserProfile() {
     try {
         const user = await apiRequest('/auth/me');
         currentUser = user;
         
-        document.getElementById('profile-name').textContent = user.full_name || 'No name set';
+        // Display name and email
+        document.getElementById('profile-name').textContent = user.full_name || user.username || 'No name set';
         document.getElementById('profile-email').textContent = user.email;
-        document.getElementById('profile-username').textContent = user.username || 'No username set';
-        document.getElementById('profile-bio').textContent = user.bio || 'No bio set';
+        
+        // Fill form fields
+        document.getElementById('profile-username').value = user.username || '';
+        document.getElementById('profile-fullname').value = user.full_name || '';
+        document.getElementById('profile-bio').value = user.bio || '';
+        document.getElementById('profile-why-here').value = user.why_here || '';
+        
+        // Load languages and interests
+        userLanguages = user.languages || [];
+        userInterests = user.interests || [];
+        renderLanguageTags();
+        renderInterestTags();
     } catch (error) {
         showToast('Failed to load profile', 'error');
     }
+}
+
+function renderLanguageTags() {
+    const container = document.getElementById('profile-languages-tags');
+    container.innerHTML = userLanguages.map(lang => `
+        <span style="background: #4a90e2; color: white; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            ${lang}
+            <button type="button" onclick="removeLanguage('${lang}')" style="background: none; border: none; color: white; cursor: pointer; padding: 0; font-size: 1rem; line-height: 1;">×</button>
+        </span>
+    `).join('');
+}
+
+function renderInterestTags() {
+    const container = document.getElementById('profile-interests-tags');
+    container.innerHTML = userInterests.map(interest => `
+        <span style="background: #2ecc71; color: white; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            ${interest}
+            <button type="button" onclick="removeInterest('${interest}')" style="background: none; border: none; color: white; cursor: pointer; padding: 0; font-size: 1rem; line-height: 1;">×</button>
+        </span>
+    `).join('');
+}
+
+function addLanguage() {
+    const input = document.getElementById('new-language');
+    const language = input.value.trim();
+    
+    if (language && !userLanguages.includes(language)) {
+        userLanguages.push(language);
+        renderLanguageTags();
+        input.value = '';
+    }
+}
+
+function removeLanguage(language) {
+    userLanguages = userLanguages.filter(l => l !== language);
+    renderLanguageTags();
+}
+
+function addInterest() {
+    const input = document.getElementById('new-interest');
+    const interest = input.value.trim();
+    
+    if (interest && !userInterests.includes(interest)) {
+        userInterests.push(interest);
+        renderInterestTags();
+        input.value = '';
+    }
+}
+
+function removeInterest(interest) {
+    userInterests = userInterests.filter(i => i !== interest);
+    renderInterestTags();
+}
+
+async function updateProfile(event) {
+    event.preventDefault();
+    
+    const profileData = {
+        username: document.getElementById('profile-username').value || null,
+        full_name: document.getElementById('profile-fullname').value || null,
+        bio: document.getElementById('profile-bio').value || null,
+        languages: userLanguages.length > 0 ? userLanguages : null,
+        interests: userInterests.length > 0 ? userInterests : null,
+        why_here: document.getElementById('profile-why-here').value || null
+    };
+    
+    try {
+        showLoading();
+        await apiRequest(`/users/${currentUser.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(profileData)
+        });
+        
+        showToast('Profile updated successfully! 🎉', 'success');
+        await loadUserProfile();
+    } catch (error) {
+        showToast(error.message || 'Failed to update profile', 'error');
+    }
+    
+    hideLoading();
 }
 
 // Modal Functions
@@ -709,10 +902,58 @@ function showCreatePlaceModal() {
     document.getElementById('create-place-modal').classList.add('show');
 }
 
-function showCheckinModal(placeId, placeName) {
+async function showCheckinModal(placeId, placeName) {
     document.getElementById('checkin-place-id').value = placeId;
     document.getElementById('checkin-place-name').textContent = placeName;
+    
+    // Load active users at this place
+    await loadActiveUsersAtPlace(placeId);
+    
     document.getElementById('checkin-modal').classList.add('show');
+}
+
+async function loadActiveUsersAtPlace(placeId) {
+    const listContainer = document.getElementById('active-users-list');
+    
+    try {
+        const activeUsers = await apiRequest(`/checkins/place/${placeId}/active`);
+        
+        if (activeUsers.length === 0) {
+            listContainer.innerHTML = '<p style="color: #999; font-size: 0.85rem; margin: 0;">No one here yet. Be the first! 🎉</p>';
+        } else {
+            listContainer.innerHTML = activeUsers.map(user => {
+                const languages = user.languages && user.languages.length > 0 
+                    ? user.languages.join(', ') 
+                    : 'No languages listed';
+                const interests = user.interests && user.interests.length > 0 
+                    ? user.interests.join(', ') 
+                    : 'No interests listed';
+                
+                const timeLeft = user.hours_left > 0 
+                    ? `${user.hours_left}h ${user.minutes_left}m left`
+                    : `${user.minutes_left}m left`;
+                
+                return `
+                    <div style="padding: 0.75rem; margin-bottom: 0.5rem; background: white; border-radius: 4px; border: 1px solid #e0e0e0;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.25rem;">
+                            <strong style="color: #333; font-size: 0.9rem;">${user.username || user.full_name || 'Anonymous'}</strong>
+                            <span style="font-size: 0.75rem; color: #ff6b6b; font-weight: 500;">⏱ ${timeLeft}</span>
+                        </div>
+                        ${user.bio ? `<p style="font-size: 0.8rem; color: #666; margin: 0.25rem 0;">${user.bio}</p>` : ''}
+                        <div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">
+                            <div>🗣️ ${languages}</div>
+                            <div>💡 ${interests}</div>
+                            ${user.why_here ? `<div>📍 ${user.why_here}</div>` : ''}
+                        </div>
+                        ${user.message ? `<p style="font-size: 0.8rem; color: #4a90e2; margin-top: 0.5rem; font-style: italic;">"${user.message}"</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (error) {
+        console.error('Failed to load active users:', error);
+        listContainer.innerHTML = '<p style="color: #999; font-size: 0.85rem;">Unable to load active users</p>';
+    }
 }
 
 function closeModal(modalId) {

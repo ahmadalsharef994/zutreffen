@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from core.security import get_password_hash
-from schemas.user import UserCreate, User
+from schemas.user import UserCreate, User, UserUpdate
 from db.session import get_db
 from models.user import User as UserModel
+from core.deps import get_current_active_user
 from typing import List
 
 router = APIRouter()
@@ -51,10 +52,35 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@router.get("/me", response_model=User)
-async def read_user_me():
+@router.put("/{user_id}", response_model=User)
+async def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_active_user)
+):
     """
-    Get current user.
+    Update user profile (requires authentication and ownership).
     """
-    # Placeholder - implement get current user logic
-    pass
+    # Check if user exists
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify ownership
+    if user.id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only update your own profile")
+    
+    # Update fields
+    update_data = user_data.model_dump(exclude_unset=True)
+    
+    # Handle password separately if provided
+    if 'password' in update_data and update_data['password']:
+        update_data['hashed_password'] = get_password_hash(update_data.pop('password'))
+    
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    
+    db.commit()
+    db.refresh(user)
+    return user

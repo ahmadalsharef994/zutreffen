@@ -115,6 +115,22 @@
                     </div>
                 </div>
                 
+                <!-- People Nearby Section -->
+                <div class="people-nearby" style="margin-bottom: 2rem;">
+                    <h3>👥 People Nearby Right Now</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">Active users at places in your area</p>
+                    <div id="people-nearby-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                        <!-- People will be loaded here -->
+                    </div>
+                </div>
+                
+                <div class="recent-activity">
+                    <h3>� People Nearby Right Now</h3>
+                    <div id="people-nearby-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <!-- People nearby will be loaded here -->
+                    </div>
+                </div>
+                
                 <div class="recent-activity">
                     <h3>Recent Check-ins</h3>
                     <div id="recent-checkins" class="checkins-list">
@@ -177,17 +193,70 @@
         <!-- Profile Section -->
         <div id="profile" class="section">
             <div class="container">
-                <h2>Profile</h2>
-                <div class="profile-card">
-                    <div class="profile-avatar">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <div class="profile-info">
-                        <h3 id="profile-name">Loading...</h3>
-                        <p id="profile-email">Loading...</p>
-                        <p id="profile-username">Loading...</p>
-                        <p id="profile-bio">Loading...</p>
-                    </div>
+                <h2>My Profile</h2>
+                <div class="profile-card" style="max-width: 800px; margin: 0 auto;">
+                    <form onsubmit="updateProfile(event)" style="width: 100%;">
+                        <div class="profile-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid #f0f0f0;">
+                            <div class="profile-avatar" style="font-size: 4rem;">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 id="profile-name" style="margin: 0 0 0.5rem 0; color: #333;">Loading...</h3>
+                                <p id="profile-email" style="margin: 0; color: #666;"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-username">Username</label>
+                            <input type="text" id="profile-username" placeholder="Your username">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-fullname">Full Name</label>
+                            <input type="text" id="profile-fullname" placeholder="Your full name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-bio">Bio</label>
+                            <textarea id="profile-bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-languages">Languages 🗣️</label>
+                            <div id="profile-languages-input" style="margin-bottom: 0.5rem;">
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;" id="profile-languages-tags"></div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="new-language" placeholder="Add a language (e.g., English, German, Arabic)">
+                                    <button type="button" onclick="addLanguage()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-interests">Interests & Hobbies 💡</label>
+                            <div id="profile-interests-input" style="margin-bottom: 0.5rem;">
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;" id="profile-interests-tags"></div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="new-interest" placeholder="Add an interest (e.g., Tech, Coffee, Travel)">
+                                    <button type="button" onclick="addInterest()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-why-here">Why are you here? 📍</label>
+                            <select id="profile-why-here">
+                                <option value="">Select...</option>
+                                <option value="Living">Living here</option>
+                                <option value="Traveling">Traveling / Visiting</option>
+                                <option value="Studying">Studying</option>
+                                <option value="Working">Working remotely</option>
+                                <option value="Exploring">Just exploring</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Profile</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -260,7 +329,7 @@
 
     <!-- Check-in Modal -->
     <div id="checkin-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
                 <h3>Check-in</h3>
                 <span class="close" onclick="closeModal('checkin-modal')">&times;</span>
@@ -269,12 +338,36 @@
                 <input type="hidden" id="checkin-place-id">
                 <div class="form-group">
                     <label>Place:</label>
-                    <p id="checkin-place-name"></p>
+                    <p id="checkin-place-name" style="font-weight: bold; color: #333;"></p>
                 </div>
+                
                 <div class="form-group">
-                    <label for="checkin-message">Message (optional)</label>
-                    <textarea id="checkin-message" rows="3" placeholder="How's your experience?"></textarea>
+                    <label for="checkin-duration">How long will you be here? ⏱️</label>
+                    <select id="checkin-duration" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="1">Quick visit (1 hour)</option>
+                        <option value="2" selected>Coffee/Work (2 hours)</option>
+                        <option value="3">Half day (3 hours)</option>
+                        <option value="4">Afternoon (4 hours)</option>
+                        <option value="5">Long work session (5 hours)</option>
+                        <option value="6">Most of the day (6 hours)</option>
+                        <option value="8">Full day (8 hours)</option>
+                        <option value="10">All day (10 hours)</option>
+                    </select>
                 </div>
+                
+                <div class="form-group">
+                    <label for="checkin-message">What are you up to? 💬</label>
+                    <textarea id="checkin-message" rows="2" placeholder="e.g., Working remotely, looking to meet people, practicing German..."></textarea>
+                </div>
+                
+                <!-- Active Users Section -->
+                <div id="active-users-section" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 4px;">
+                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #666;">👥 People here now:</h4>
+                    <div id="active-users-list">
+                        <p style="color: #999; font-size: 0.85rem;">Loading...</p>
+                    </div>
+                </div>
+                
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('checkin-modal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Check-in</button>
