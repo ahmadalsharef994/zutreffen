@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import List, Union, Optional
 
-class Settings(BaseSettings):
+class Config(BaseSettings):
     PROJECT_NAME: str = "Zutreffen"
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
     DATABASE_URL: str
@@ -18,4 +18,4 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = True
 
-settings = Settings()
+config = Config()

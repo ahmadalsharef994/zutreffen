@@ -1,33 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.db.session import get_db
-from app.models.place import Place
-from app.models.user import User
-from app.schemas.place import Place as PlaceSchema, PlaceCreate, PlaceUpdate
-from app.api.deps import get_current_active_user
+from db.session import get_db
+from models.place import Place
+from models.user import User
+from schemas.place import Place as PlaceSchema, PlaceCreate, PlaceUpdate
+from core.deps import get_current_active_user
 
-
-
-const categories = [
-    // Food & Drink
-    'cafe', 'bar', 'restaurant', 'fast_food', 'kiosk',
-    
-    // Hospitality
-    'hotel_lobby', 'hostel', 'airport_lounge',
-    
-    // Work & Study
-    'coworking', 'library', 'business_center', 'university_cafe',
-    
-    // Shopping & Entertainment
-    'mall_food_court', 'cinema_lobby', 'gaming_cafe', 'entertainment_venue',
-    
-    // Transportation
-    'train_station_cafe', 'bus_terminal', 'service_station',
-    
-    // Fitness & Wellness
-    'gym_cafe', 'spa_lounge'
-];
 
 router = APIRouter()
 

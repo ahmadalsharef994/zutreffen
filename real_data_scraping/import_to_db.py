@@ -23,11 +23,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 try:
     from sqlalchemy.orm import Session
-    from app.models.place import Place
-    from app.db.session import SessionLocal, engine
-    from app.models import Base
+    from models.place import Place
+    from db.session import SessionLocal, engine, Base
 except ImportError:
-    print("❌ Error: Cannot import Zutreffen app modules")
+    print("❌ Error: Cannot import Zutreffen modules")
     print("Make sure you're running this from the project root")
     sys.exit(1)
 

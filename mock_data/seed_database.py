@@ -6,9 +6,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy.orm import Session
-from app.db.session import engine, Base, SessionLocal
-from app.models import User, Place, CheckIn
-from app.core.security import get_password_hash
+from db.session import engine, Base, SessionLocal
+from models.user import User
+from models.place import Place
+from models.checkin import CheckIn
+from core.security import get_password_hash
 from datetime import datetime, timedelta
 import random
 

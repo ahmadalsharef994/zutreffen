@@ -1,18 +1,27 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.core.config import settings
-from app.core.security import create_access_token, get_password_hash
-from app.db.session import get_db
-from app.models.user import User
-from app.schemas.auth import Token, UserLogin, UserRegister
-from app.schemas.user import User as UserSchema
-from app.api.deps import authenticate_user, get_current_active_user
+from core.config import config
+from core.security import create_access_token, get_password_hash
+from db.session import get_db
+from models.user import User
+from schemas.auth import Token, UserLogin, UserRegister
+from schemas.user import User as UserSchema
+from core.deps import authenticate_user, get_current_active_user
+
+# imports pydantic schemas, fastapi, get_db
+# why sql achemy, models, db, schemas? aren't all for database?
+'''
+Models: Define the database structure and are used for querying.
+Schemas: Define the API contract (input/output validation) and are decoupled from the database.
+Session (db): Manages the connection to the database and ensures queries are executed in a transactional context.
+'''
 
 router = APIRouter()
 
+#Register user and longin/logout routes and current user details
+
 @router.post("/register", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(user_data: UserRegister, db = Depends(get_db)):
     """
     Register a new user.
     """
@@ -49,7 +58,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login", response_model=Token)
-async def login(user_data: UserLogin, db: Session = Depends(get_db)):
+async def login(user_data: UserLogin, db = Depends(get_db)):
     """
     Login with email and password. Returns JWT access token.
     """
@@ -61,7 +70,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )

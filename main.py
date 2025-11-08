@@ -4,8 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from app.api.v1.api import api_router
-from app.core.config import settings
+from routes.api import api_router
+from core.config import config
 import os
 
 # Middleware to disable caching for frontend files
@@ -20,9 +20,9 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title=settings.PROJECT_NAME,
+    title=config.PROJECT_NAME,
         version="1.0.0",
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    openapi_url=f"{config.API_V1_STR}/openapi.json",
     )
     
     # Add no-cache middleware first
@@ -38,10 +38,10 @@ def create_app() -> FastAPI:
     )
     
     # Include API router
-    app.include_router(api_router, prefix=settings.API_V1_STR)
+    app.include_router(api_router, prefix=config.API_V1_STR)
     
     # Serve static files (frontend)
-    frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend")
     if os.path.exists(frontend_path):
         app.mount("/static", StaticFiles(directory=frontend_path), name="static")
     

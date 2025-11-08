@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
-from app.db.session import get_db
-from app.models.checkin import CheckIn
-from app.models.place import Place
-from app.models.user import User
-from app.schemas.checkin import CheckIn as CheckInSchema, CheckInCreate, CheckInUpdate
-from app.api.deps import get_current_active_user
+from db.session import get_db
+from models.checkin import CheckIn
+from models.place import Place
+from models.user import User
+from schemas.checkin import CheckIn as CheckInSchema, CheckInCreate, CheckInUpdate
+from core.deps import get_current_active_user
 
 router = APIRouter()
 
