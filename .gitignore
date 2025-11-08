@@ -45,6 +45,9 @@ secrets.json
 *.key
 *.crt
 
+# Scraped data - too large for git
+real_data_scraping/data/
+
 # IDEs and editors
 .vscode/
 .idea/
