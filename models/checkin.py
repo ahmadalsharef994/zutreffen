@@ -11,6 +11,7 @@ class CheckIn(Base):
     place_id = Column(Integer, ForeignKey("places.id"), nullable=False)
     status = Column(String, default="active")  # active, ended
     message = Column(Text, nullable=True)
+    duration_hours = Column(Integer, default=2)  # Duration in hours (1-10)
     check_in_time = Column(DateTime(timezone=True), server_default=func.now())
     check_out_time = Column(DateTime(timezone=True), nullable=True)
     

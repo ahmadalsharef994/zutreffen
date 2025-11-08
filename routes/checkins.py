@@ -80,11 +80,12 @@ async def create_checkin(
             detail="You already have an active check-in. Please end it first."
         )
     
-    # Create new check-in
+    # Create new check-in with duration
     new_checkin = CheckIn(
         user_id=current_user.id,
         place_id=checkin_data.place_id,
         message=checkin_data.message,
+        duration_hours=checkin_data.duration_hours or 2,  # Default 2 hours
         status="active"
     )
     
@@ -145,4 +146,57 @@ async def delete_checkin(
     
     db.delete(checkin)
     db.commit()
-    return None
+    return {"message": "Check-in deleted successfully"}
+
+@router.get("/place/{place_id}/active", response_model=List[dict])
+async def get_active_users_at_place(
+    place_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all active users currently checked in at a specific place.
+    Returns user info with time remaining.
+    """
+    from datetime import datetime, timedelta
+    
+    # Get active checkins at this place
+    active_checkins = db.query(CheckIn, User).join(
+        User, CheckIn.user_id == User.id
+    ).filter(
+        CheckIn.place_id == place_id,
+        CheckIn.status == "active"
+    ).all()
+    
+    result = []
+    now = datetime.utcnow()
+    
+    for checkin, user in active_checkins:
+        # Calculate time remaining
+        checkin_end = checkin.check_in_time + timedelta(hours=checkin.duration_hours)
+        time_left = checkin_end - now
+        hours_left = max(0, int(time_left.total_seconds() / 3600))
+        minutes_left = max(0, int((time_left.total_seconds() % 3600) / 60))
+        
+        # Auto-checkout if time expired
+        if time_left.total_seconds() <= 0:
+            checkin.status = "ended"
+            checkin.check_out_time = checkin_end
+            db.commit()
+            continue
+        
+        result.append({
+            "user_id": user.id,
+            "username": user.username or user.full_name or "Anonymous",
+            "full_name": user.full_name,
+            "bio": user.bio,
+            "languages": user.languages or [],
+            "interests": user.interests or [],
+            "why_here": user.why_here,
+            "message": checkin.message,
+            "duration_hours": checkin.duration_hours,
+            "hours_left": hours_left,
+            "minutes_left": minutes_left,
+            "checked_in_at": checkin.check_in_time.isoformat()
+        })
+    
+    return result

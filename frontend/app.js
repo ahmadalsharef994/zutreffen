@@ -165,11 +165,13 @@ function toggleMenu() {
 function showAuthSection() {
     authSection.classList.remove('hidden');
     mainApp.classList.add('hidden');
+    document.getElementById('main-navbar').style.display = 'none';
 }
 
 function showMainApp() {
     authSection.classList.add('hidden');
     mainApp.classList.remove('hidden');
+    document.getElementById('main-navbar').style.display = 'block';
 }
 
 function showLoading() {
@@ -233,14 +235,14 @@ async function loadDashboardData() {
         
         // Load statistics
         const [places, users, myCheckins, recentCheckins] = await Promise.all([
-            apiRequest('/places'),
-            apiRequest('/users'),
+            apiRequest('/places/'),
+            apiRequest('/users/'),
             apiRequest('/checkins/my'),
-            apiRequest('/checkins?limit=5')
+            apiRequest('/checkins/?limit=5')
         ]);
 
-        // Update stats
-        document.getElementById('total-places').textContent = places.length;
+        // Update stats - Show actual total count
+        document.getElementById('total-places').textContent = places.length.toLocaleString();
         document.getElementById('total-users').textContent = users.length;
         document.getElementById('my-checkins').textContent = myCheckins.length;
 
@@ -278,12 +280,15 @@ async function loadDashboardData() {
 }
 
 // Places Functions
+let allPlaces = []; // Store all places for filtering
+
 async function loadPlaces() {
     try {
         showLoading();
-        const places = await apiRequest('/places');
+        const places = await apiRequest('/places/');
+        allPlaces = places; // Store for filtering
         displayPlaces(places);
-        populateFilters(places);
+        await populateFilters(); // Load cities from API
     } catch (error) {
         showToast('Failed to load places', 'error');
     }
@@ -334,45 +339,129 @@ function createPlaceCard(place) {
     return card;
 }
 
-function populateFilters(places) {
-    const cityFilter = document.getElementById('city-filter');
-    const cities = [...new Set(places.map(place => place.city))];
-    
-    // Clear existing options except "All Cities"
-    cityFilter.innerHTML = '<option value="">All Cities</option>';
-    
-    cities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
-        cityFilter.appendChild(option);
-    });
+async function populateFilters() {
+    try {
+        // Load cities from the API
+        const cities = await apiRequest('/places/cities/all');
+        const cityFilter = document.getElementById('city-filter');
+        
+        // Clear existing options except "All Cities"
+        cityFilter.innerHTML = '<option value="">All Cities</option>';
+        
+        cities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            cityFilter.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load cities:', error);
+    }
 }
 
-function filterPlaces() {
-    const searchTerm = document.getElementById('place-search').value.toLowerCase();
+async function filterPlaces() {
+    const searchTerm = document.getElementById('place-search').value.trim();
     const cityFilter = document.getElementById('city-filter').value;
     const categoryFilter = document.getElementById('category-filter').value;
     
-    // This is a simple client-side filter. In a real app, you'd probably want server-side filtering
-    loadPlaces().then(() => {
-        const cards = document.querySelectorAll('.place-card');
-        cards.forEach(card => {
-            const name = card.querySelector('h3').textContent.toLowerCase();
-            const city = card.querySelector('.place-location').textContent;
-            const category = card.querySelector('.place-category').textContent;
-            
-            const matchesSearch = name.includes(searchTerm);
-            const matchesCity = !cityFilter || city.includes(cityFilter);
-            const matchesCategory = !categoryFilter || category === categoryFilter;
-            
-            if (matchesSearch && matchesCity && matchesCategory) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
+    try {
+        showLoading();
+        let places;
+        
+        // Use backend API for filtering
+        if (searchTerm) {
+            // Text search
+            places = await apiRequest(`/places/search/text?query=${encodeURIComponent(searchTerm)}`);
+        } else if (cityFilter) {
+            // Filter by city
+            places = allPlaces.filter(p => p.city === cityFilter);
+        } else {
+            // Show all places
+            places = allPlaces;
+        }
+        
+        // Apply category filter if selected
+        if (categoryFilter) {
+            places = places.filter(p => p.category === categoryFilter);
+        }
+        
+        displayPlaces(places);
+        hideLoading();
+    } catch (error) {
+        console.error('Filter error:', error);
+        // Fallback to client-side filtering
+        let filtered = allPlaces;
+        
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                (p.description && p.description.toLowerCase().includes(term))
+            );
+        }
+        
+        if (cityFilter) {
+            filtered = filtered.filter(p => p.city === cityFilter);
+        }
+        
+        if (categoryFilter) {
+            filtered = filtered.filter(p => p.category === categoryFilter);
+        }
+        
+        displayPlaces(filtered);
+        hideLoading();
+    }
+}
+
+// GPS Location Function
+async function useMyLocation() {
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser', 'error');
+        return;
+    }
+
+    showLoading();
+    showToast('Getting your location...', 'info');
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const radius = 5; // 5 km default radius
+
+            try {
+                const places = await apiRequest(
+                    `/places/nearby/gps?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
+                );
+                
+                if (places.length === 0) {
+                    showToast('No places found within 5km', 'info');
+                } else {
+                    showToast(`Found ${places.length} places nearby!`, 'success');
+                    displayPlaces(places);
+                }
+            } catch (error) {
+                showToast('Failed to load nearby places', 'error');
             }
-        });
-    });
+            hideLoading();
+        },
+        (error) => {
+            hideLoading();
+            let errorMsg = 'Unable to get your location';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = 'Location permission denied. Please enable location access.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = 'Location information unavailable.';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = 'Location request timed out.';
+                    break;
+            }
+            showToast(errorMsg, 'error');
+        }
+    );
 }
 
 async function createPlace(event) {
@@ -392,7 +481,7 @@ async function createPlace(event) {
 
     try {
         showLoading();
-        await apiRequest('/places', {
+        await apiRequest('/places/', {
             method: 'POST',
             body: JSON.stringify(placeData)
         });

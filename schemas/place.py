@@ -7,7 +7,7 @@ class PlaceBase(BaseModel):
     description: Optional[str] = None
     address: str
     city: str
-    postal_code: str
+    postal_code: Optional[str] = None
     country: str = "Germany"
     latitude: float
     longitude: float
@@ -17,7 +17,7 @@ class PlaceBase(BaseModel):
     # Extended fields
     phone: Optional[str] = None
     website: Optional[str] = None
-    opening_hours: Optional[Union[List[str], dict]] = None
+    opening_hours: Optional[Union[str, List[str], dict]] = None
     rating: Optional[float] = None
     user_ratings_total: Optional[int] = None
     price_level: Optional[int] = None
@@ -41,7 +41,7 @@ class PlaceUpdate(BaseModel):
     image_url: Optional[str] = None
     phone: Optional[str] = None
     website: Optional[str] = None
-    opening_hours: Optional[Union[List[str], dict]] = None
+    opening_hours: Optional[Union[str, List[str], dict]] = None
     rating: Optional[float] = None
     price_level: Optional[int] = None
     business_status: Optional[str] = None
