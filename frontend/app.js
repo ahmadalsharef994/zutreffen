@@ -1,10 +1,87 @@
 // Configuration
-const API_BASE = 'http://localhost:8001/api/v1';
+// Use 127.0.0.1 instead of localhost to bypass some extension blockers
+const API_BASE = window.location.origin + '/api/v1';
 
 // Global state
 let currentUser = null;
 let authToken = null;
 let currentSection = 'dashboard';
+
+// Place cache for quick lookups in detail modal
+let allPlaces = [];
+const placeCache = new Map();
+
+function normalizePlaces(places = []) {
+    return places.map(item => {
+        if (!item) {
+            return item;
+        }
+
+        if (item.place) {
+            return { ...item.place, distance_km: item.distance_km };
+        }
+
+        return item;
+    });
+}
+
+function updatePlaceCache(places = []) {
+    places.forEach(place => {
+        if (place && place.id) {
+            placeCache.set(place.id, place);
+        }
+    });
+}
+
+function getPlaceFromCache(placeId) {
+    return placeCache.get(Number(placeId));
+}
+
+// Helper function to make API calls using XMLHttpRequest (bypasses some extension blockers)
+async function apiCall(url, options = {}) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const method = options.method || 'GET';
+        
+        xhr.open(method, url, true);
+        
+        // Set headers
+        if (options.headers) {
+            Object.keys(options.headers).forEach(key => {
+                xhr.setRequestHeader(key, options.headers[key]);
+            });
+        }
+        
+        xhr.onload = function() {
+            try {
+                const data = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+                resolve({
+                    ok: xhr.status >= 200 && xhr.status < 300,
+                    status: xhr.status,
+                    data: data,
+                    json: async () => data
+                });
+            } catch (e) {
+                resolve({
+                    ok: false,
+                    status: xhr.status,
+                    data: { detail: xhr.responseText || xhr.statusText },
+                    json: async () => ({ detail: xhr.responseText || xhr.statusText })
+                });
+            }
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Network request failed. Please check if browser extensions are blocking the request.'));
+        };
+        
+        xhr.ontimeout = function() {
+            reject(new Error('Request timeout'));
+        };
+        
+        xhr.send(options.body || null);
+    });
+}
 
 // DOM Elements
 const authSection = document.getElementById('auth-section');
@@ -54,7 +131,7 @@ async function login(event) {
     showLoading();
 
     try {
-        const response = await fetch(`${API_BASE}/auth/login`, {
+        const response = await apiCall(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -78,7 +155,9 @@ async function login(event) {
             showToast(data.detail || 'Login failed', 'error');
         }
     } catch (error) {
-        showToast('Network error. Please try again.', 'error');
+        console.error('Login error:', error);
+        document.getElementById('browser-warning').style.display = 'block';
+        showToast(error.message || 'Network error. Please check your browser extensions.', 'error');
     }
 
     hideLoading();
@@ -95,7 +174,7 @@ async function register(event) {
     showLoading();
 
     try {
-        const response = await fetch(`${API_BASE}/auth/register`, {
+        const response = await apiCall(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -205,7 +284,7 @@ async function apiRequest(endpoint, options = {}) {
     }
 
     try {
-        const response = await fetch(url, {
+        const response = await apiCall(url, {
             ...options,
             headers
         });
@@ -375,31 +454,33 @@ async function loadPeopleNearby(places) {
 }
 
 // Places Functions
-let allPlaces = []; // Store all places for filtering
 
 async function loadPlaces() {
     try {
         showLoading();
         const places = await apiRequest('/places/');
-        allPlaces = places; // Store for filtering
-        displayPlaces(places);
-        await populateFilters(); // Load cities from API
+        allPlaces = normalizePlaces(places);
+        updatePlaceCache(allPlaces);
+        displayPlaces(allPlaces);
     } catch (error) {
         showToast('Failed to load places', 'error');
     }
     hideLoading();
 }
 
-function displayPlaces(places) {
+function displayPlaces(places = []) {
     const placesGrid = document.getElementById('places-grid');
     placesGrid.innerHTML = '';
 
-    if (places.length === 0) {
+    const normalizedPlaces = normalizePlaces(places);
+    updatePlaceCache(normalizedPlaces);
+
+    if (normalizedPlaces.length === 0) {
         placesGrid.innerHTML = '<p class="text-muted">No places found</p>';
         return;
     }
 
-    places.forEach(place => {
+    normalizedPlaces.forEach(place => {
         placesGrid.appendChild(createPlaceCard(place));
     });
 }
@@ -407,6 +488,12 @@ function displayPlaces(places) {
 function createPlaceCard(place) {
     const card = document.createElement('div');
     card.className = 'place-card';
+    card.addEventListener('click', () => openPlaceDetails(place.id));
+
+    const safePlaceName = JSON.stringify(place.name || 'Place');
+    const distanceBadge = typeof place.distance_km === 'number'
+        ? `<span class="place-distance">${place.distance_km.toFixed(1)} km away</span>`
+        : '';
     
     card.innerHTML = `
         <div class="place-image">
@@ -422,89 +509,149 @@ function createPlaceCard(place) {
                 <span class="place-category">${place.category}</span>
                 <span class="place-location">${place.city}</span>
             </div>
+            ${distanceBadge}
             <div class="place-location">
                 <i class="fas fa-map-marker-alt"></i> ${place.address}
             </div>
-            <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;" onclick="showCheckinModal(${place.id}, '${place.name}')">
-                <i class="fas fa-check-circle"></i> Check-in
-            </button>
+            <div class="place-actions">
+                <button class="btn btn-secondary" type="button" onclick="event.stopPropagation(); openPlaceDetails(${place.id})">
+                    <i class="fas fa-eye"></i> View details
+                </button>
+                <button class="btn btn-primary" type="button" onclick="event.stopPropagation(); showCheckinModal(${place.id}, ${safePlaceName})">
+                    <i class="fas fa-check-circle"></i> Check-in
+                </button>
+            </div>
         </div>
     `;
     
     return card;
 }
 
-async function populateFilters() {
-    try {
-        // Load cities from the API
-        const cities = await apiRequest('/places/cities/all');
-        const cityFilter = document.getElementById('city-filter');
-        
-        // Clear existing options except "All Cities"
-        cityFilter.innerHTML = '<option value="">All Cities</option>';
-        
-        cities.forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            cityFilter.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Failed to load cities:', error);
+function formatOpeningHours(openingHours) {
+    if (!openingHours) {
+        return null;
     }
+
+    if (Array.isArray(openingHours)) {
+        return openingHours.join('<br>');
+    }
+
+    if (typeof openingHours === 'object') {
+        return Object.entries(openingHours)
+            .map(([day, hours]) => `${day}: ${hours}`)
+            .join('<br>');
+    }
+
+    return openingHours;
+}
+
+async function openPlaceDetails(placeId) {
+    try {
+        let place = getPlaceFromCache(placeId);
+
+        if (!place) {
+            const response = await apiRequest(`/places/${placeId}`);
+            const [normalized] = normalizePlaces([response]);
+            place = normalized;
+            updatePlaceCache([place]);
+        }
+
+        renderPlaceDetails(place);
+        document.getElementById('place-details-modal').classList.add('show');
+    } catch (error) {
+        console.error('Failed to open place details:', error);
+        showToast('Failed to load place details', 'error');
+    }
+}
+
+function renderPlaceDetails(place) {
+    const nameEl = document.getElementById('place-details-name');
+    const descriptionEl = document.getElementById('place-details-description');
+    const addressEl = document.getElementById('place-details-address');
+    const metaEl = document.getElementById('place-details-meta');
+    const contactEl = document.getElementById('place-details-contact');
+    const hoursEl = document.getElementById('place-details-hours');
+    const ratingEl = document.getElementById('place-details-rating');
+    const distanceEl = document.getElementById('place-details-distance');
+    const checkinBtn = document.getElementById('place-details-checkin-btn');
+
+    nameEl.textContent = place.name || 'Place';
+    descriptionEl.innerHTML = place.description || 'No description yet.';
+    addressEl.innerHTML = `
+        <strong><i class="fas fa-map-marker-alt"></i> Address:</strong>
+        <span>${place.address || 'n/a'}, ${place.postal_code || ''} ${place.city || ''}</span>
+    `;
+
+    metaEl.innerHTML = `
+        <span class="details-pill">${place.category || 'Uncategorized'}</span>
+        ${place.country ? `<span class="details-pill">${place.country}</span>` : ''}
+    `;
+
+    if (typeof place.distance_km === 'number') {
+        distanceEl.innerHTML = `<i class="fas fa-location-arrow"></i> ${place.distance_km.toFixed(1)} km away from you`;
+        distanceEl.style.display = 'block';
+    } else {
+        distanceEl.style.display = 'none';
+    }
+
+    if (place.phone || place.website) {
+        const phoneHtml = place.phone ? `<div><i class="fas fa-phone"></i> <a href="tel:${place.phone}">${place.phone}</a></div>` : '';
+        const websiteHtml = place.website ? `<div><i class="fas fa-globe"></i> <a href="${place.website}" target="_blank" rel="noopener">Website</a></div>` : '';
+        contactEl.innerHTML = `<strong>Contact</strong>${phoneHtml}${websiteHtml}`;
+        contactEl.style.display = 'block';
+    } else {
+        contactEl.style.display = 'none';
+    }
+
+    const formattedHours = formatOpeningHours(place.opening_hours);
+    if (formattedHours) {
+        hoursEl.innerHTML = `<strong>Opening hours</strong><p>${formattedHours}</p>`;
+        hoursEl.style.display = 'block';
+    } else {
+        hoursEl.style.display = 'none';
+    }
+
+    if (place.rating) {
+        const reviews = place.user_ratings_total ? ` (${place.user_ratings_total} reviews)` : '';
+        ratingEl.innerHTML = `<strong>Rating</strong><p>⭐ ${place.rating}${reviews}</p>`;
+        ratingEl.style.display = 'block';
+    } else {
+        ratingEl.style.display = 'none';
+    }
+
+    checkinBtn.onclick = () => {
+        closeModal('place-details-modal');
+        showCheckinModal(place.id, place.name || '');
+    };
 }
 
 async function filterPlaces() {
     const searchTerm = document.getElementById('place-search').value.trim();
-    const cityFilter = document.getElementById('city-filter').value;
     const categoryFilter = document.getElementById('category-filter').value;
     
     try {
-        showLoading();
-        let places;
-        
-        // Use backend API for filtering
-        if (searchTerm) {
-            // Text search
-            places = await apiRequest(`/places/search/text?query=${encodeURIComponent(searchTerm)}`);
-        } else if (cityFilter) {
-            // Filter by city
-            places = allPlaces.filter(p => p.city === cityFilter);
-        } else {
-            // Show all places
-            places = allPlaces;
-        }
-        
-        // Apply category filter if selected
-        if (categoryFilter) {
-            places = places.filter(p => p.category === categoryFilter);
-        }
-        
-        displayPlaces(places);
-        hideLoading();
-    } catch (error) {
-        console.error('Filter error:', error);
-        // Fallback to client-side filtering
-        let filtered = allPlaces;
-        
+        let filtered = [...allPlaces];
+
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
-            filtered = filtered.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                (p.description && p.description.toLowerCase().includes(term))
-            );
+            filtered = filtered.filter(place => {
+                const nameMatch = place.name && place.name.toLowerCase().includes(term);
+                const cityMatch = place.city && place.city.toLowerCase().includes(term);
+                const postalCode = place.postal_code ? String(place.postal_code).toLowerCase() : '';
+                const postalMatch = postalCode.includes(term);
+                const addressMatch = place.address && place.address.toLowerCase().includes(term);
+                return nameMatch || cityMatch || postalMatch || addressMatch;
+            });
         }
-        
-        if (cityFilter) {
-            filtered = filtered.filter(p => p.city === cityFilter);
-        }
-        
+
         if (categoryFilter) {
-            filtered = filtered.filter(p => p.category === categoryFilter);
+            filtered = filtered.filter(place => place.category === categoryFilter);
         }
-        
+
         displayPlaces(filtered);
-        hideLoading();
+    } catch (error) {
+        console.error('Filter error:', error);
+        displayPlaces(allPlaces);
     }
 }
 
@@ -525,15 +672,16 @@ async function useMyLocation() {
             const radius = 5; // 5 km default radius
 
             try {
-                const places = await apiRequest(
-                    `/places/nearby/gps?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
+                const nearbyResponse = await apiRequest(
+                    `/places/nearby/gps?lat=${latitude}&lng=${longitude}&radius=${radius}`
                 );
+                const nearbyPlaces = normalizePlaces(nearbyResponse);
                 
-                if (places.length === 0) {
+                if (nearbyPlaces.length === 0) {
                     showToast('No places found within 5km', 'info');
                 } else {
-                    showToast(`Found ${places.length} places nearby!`, 'success');
-                    displayPlaces(places);
+                    showToast(`Found ${nearbyPlaces.length} places nearby!`, 'success');
+                    displayPlaces(nearbyPlaces);
                 }
             } catch (error) {
                 showToast('Failed to load nearby places', 'error');

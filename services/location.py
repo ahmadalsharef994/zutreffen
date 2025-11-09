@@ -3,7 +3,7 @@ Service functions for location-based operations
 """
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import func, distinct
+from sqlalchemy import func, distinct, or_
 from models.place import Place
 import math
 
@@ -79,9 +79,14 @@ def search_places(
     
     # Text search
     if query:
-        search_filter = func.lower(Place.name).contains(query.lower()) | \
-                       func.lower(Place.description).contains(query.lower()) | \
-                       func.lower(Place.address).contains(query.lower())
+        normalized_query = query.lower()
+        search_filter = or_(
+            func.lower(Place.name).contains(normalized_query),
+            func.lower(Place.description).contains(normalized_query),
+            func.lower(Place.address).contains(normalized_query),
+            func.lower(Place.city).contains(normalized_query),
+            func.lower(Place.postal_code).contains(normalized_query)
+        )
         filters.append(search_filter)
     
     # City filter

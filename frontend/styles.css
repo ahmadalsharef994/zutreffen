@@ -339,6 +339,10 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     overflow: hidden;
     transition: transform 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .place-card:hover {
@@ -396,6 +400,27 @@ input:focus, textarea:focus, select:focus {
 .place-location {
     color: #666;
     font-size: 0.9rem;
+}
+
+.place-distance {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    color: #0c5460;
+    background: #d1ecf1;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.place-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.place-actions .btn {
+    flex: 1;
 }
 
 /* Check-ins */
@@ -556,6 +581,60 @@ input:focus, textarea:focus, select:focus {
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+}
+
+.place-details-modal {
+    max-width: 700px;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.details-pill {
+    display: inline-block;
+    background: #f1f3f5;
+    color: #495057;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin: 0 0.5rem 0.5rem 0;
+}
+
+.place-details-description {
+    margin: 1rem 0;
+    color: #495057;
+}
+
+.place-details-distance {
+    display: none;
+    margin-bottom: 1rem;
+    color: #0c5460;
+    background: #d1ecf1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.place-details-row {
+    margin-bottom: 1rem;
+    color: #495057;
+}
+
+.place-details-row strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #212529;
+}
+
+.place-details-row a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.place-details-row a:hover {
+    text-decoration: underline;
 }
 
 .modal-header {

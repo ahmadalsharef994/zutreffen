@@ -6,8 +6,31 @@
     <title>Zutreffen - Check-in App</title>
     <link rel="stylesheet" href="/static/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .browser-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            z-index: 10000;
+            display: none;
+        }
+        .browser-warning a {
+            color: white;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+    <!-- Browser Extension Warning -->
+    <div id="browser-warning" class="browser-warning">
+        ⚠️ If you're having login issues, <a href="/static/test-api.html" target="_blank">try this test page</a> or disable browser extensions (ad blockers) and refresh.
+    </div>
     <!-- Navigation -->
     <nav class="navbar" id="main-navbar" style="display: none;">
         <div class="nav-container">
@@ -151,10 +174,7 @@
                 </div>
                 
                 <div class="filters">
-                    <input type="text" id="place-search" placeholder="Search places by name..." oninput="filterPlaces()">
-                    <select id="city-filter" onchange="filterPlaces()">
-                        <option value="">All Cities</option>
-                    </select>
+                    <input type="text" id="place-search" placeholder="Search by place, city, or PLZ" oninput="filterPlaces()">
                     <select id="category-filter" onchange="filterPlaces()">
                         <option value="">All Categories</option>
                         <option value="restaurant">Restaurant</option>
@@ -258,6 +278,29 @@
                         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Profile</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Place Details Modal -->
+    <div id="place-details-modal" class="modal">
+        <div class="modal-content place-details-modal">
+            <div class="modal-header">
+                <h3 id="place-details-name">Place</h3>
+                <span class="close" onclick="closeModal('place-details-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="place-details-meta"></div>
+                <p id="place-details-description" class="place-details-description"></p>
+                <div id="place-details-distance" class="place-details-distance"></div>
+                <div id="place-details-address" class="place-details-row"></div>
+                <div id="place-details-contact" class="place-details-row"></div>
+                <div id="place-details-hours" class="place-details-row"></div>
+                <div id="place-details-rating" class="place-details-row"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('place-details-modal')">Close</button>
+                <button type="button" id="place-details-checkin-btn" class="btn btn-primary">Check-in here</button>
             </div>
         </div>
     </div>

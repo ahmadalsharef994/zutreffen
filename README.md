@@ -16,21 +16,20 @@ A modern FastAPI application that helps people meet in public places across Germ
 
 ```bash
 # Start the server
-
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+uvicorn main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 **Access the app:**
 - 🌐 **Web Interface**: http://localhost:8001
-- 🧪 **API Test Page**: http://localhost:8001/static/test.html
+- 🧪 **API Test Page**: http://localhost:8001/static/test-api.html
 - 📚 **API Docs**: http://localhost:8001/docs
 - 📖 **ReDoc**: http://localhost:8001/redoc
 
 ## 🔑 Test Login
 
 ```
-Email: max.mueller@example.com
-Password: password123
+Email: test@test.com
+Password: test
 ```
 
 ## 🌐 Web Interface
@@ -45,7 +44,7 @@ A complete web interface is available at the root URL with features:
 **Troubleshooting**: If you get `net::ERR_BLOCKED_BY_CLIENT` errors:
 1. Open in **Incognito Mode** (Ctrl+Shift+N)
 2. Disable ad blockers/privacy extensions temporarily
-3. Use the test page: http://localhost:8001/static/test.html
+3. Use the test page: http://localhost:8001/static/test-api.html
 
 
 
@@ -287,3 +286,14 @@ Your FastAPI application is fully functional with:
 - ✅ Comprehensive testing
 
 Access the interactive API docs at: **http://localhost:8001/docs**
+
+
+
+
+
+
+Your Term	FastAPI Term	Purpose
+Validator/Sanitizer	Pydantic Schema	Validate input, serialize output
+Model/Schema	SQLAlchemy Model	Database table structure
+DTO	Schema	Data transfer between layers
+Middleware	Dependency	Reusable logic (auth, validation)

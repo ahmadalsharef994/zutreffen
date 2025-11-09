@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Zutreffen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Zutreffen API Test Page</h1>
+    <p>Use this page to test API endpoints without browser extension interference.</p>
+
+    <div class="test-section">
+        <h2>1. Test Health Check</h2>
+        <button onclick="testHealth()">Test /api/v1/health</button>
+        <pre id="health-result">Click button to test...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Login</h2>
+        <input type="email" id="login-email" value="test@test.com" placeholder="Email">
+        <input type="password" id="login-password" value="test" placeholder="Password">
+        <button onclick="testLogin()">Test Login</button>
+        <pre id="login-result">Click button to test...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Register</h2>
+        <input type="email" id="register-email" value="newuser@test.com" placeholder="Email">
+        <input type="password" id="register-password" value="test123" placeholder="Password">
+        <button onclick="testRegister()">Test Register</button>
+        <pre id="register-result">Click button to test...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Places (No Auth)</h2>
+        <button onclick="testPlaces()">Test /api/v1/places</button>
+        <pre id="places-result">Click button to test...</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Browser Info</h2>
+        <pre id="browser-info"></pre>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001/api/v1';
+
+        // Display browser info
+        document.getElementById('browser-info').textContent = 
+            `User Agent: ${navigator.userAgent}\n` +
+            `Platform: ${navigator.platform}\n` +
+            `Extensions may be blocking requests if you see ERR_BLOCKED_BY_CLIENT`;
+
+        async function testHealth() {
+            const result = document.getElementById('health-result');
+            try {
+                result.textContent = 'Testing...';
+                const response = await fetch(`${API_BASE}/health/`);
+                const data = await response.json();
+                result.className = 'success';
+                result.textContent = `✅ Success (${response.status})\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.className = 'error';
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                result.textContent = 'Testing...';
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.className = 'success';
+                    result.textContent = `✅ Success (${response.status})\n` + JSON.stringify(data, null, 2);
+                    localStorage.setItem('authToken', data.access_token);
+                } else {
+                    result.className = 'error';
+                    result.textContent = `❌ Failed (${response.status})\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                result.className = 'error';
+                result.textContent = `❌ Error: ${error.message}\n\nIf you see ERR_BLOCKED_BY_CLIENT, disable browser extensions or use Incognito mode.`;
+            }
+        }
+
+        async function testRegister() {
+            const result = document.getElementById('register-result');
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            try {
+                result.textContent = 'Testing...';
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.className = 'success';
+                    result.textContent = `✅ Success (${response.status})\n` + JSON.stringify(data, null, 2);
+                } else {
+                    result.className = 'error';
+                    result.textContent = `❌ Failed (${response.status})\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                result.className = 'error';
+                result.textContent = `❌ Error: ${error.message}\n\nIf you see ERR_BLOCKED_BY_CLIENT, disable browser extensions or use Incognito mode.`;
+            }
+        }
+
+        async function testPlaces() {
+            const result = document.getElementById('places-result');
+            try {
+                result.textContent = 'Testing...';
+                const response = await fetch(`${API_BASE}/places/?limit=5`);
+                const data = await response.json();
+                result.className = 'success';
+                result.textContent = `✅ Success (${response.status}) - Loaded ${data.length} places\n` + JSON.stringify(data[0] || {}, null, 2);
+            } catch (error) {
+                result.className = 'error';
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
