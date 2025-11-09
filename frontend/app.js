@@ -576,10 +576,12 @@ function renderPlaceDetails(place) {
     const checkinBtn = document.getElementById('place-details-checkin-btn');
 
     nameEl.textContent = place.name || 'Place';
-    descriptionEl.innerHTML = place.description || 'No description yet.';
+    descriptionEl.textContent = place.description || 'No description yet.';
+    const cityLine = [place.postal_code, place.city].filter(Boolean).join(' ');
+    const addressLine = [place.address || 'n/a', cityLine].filter(Boolean).join(', ');
     addressEl.innerHTML = `
         <strong><i class="fas fa-map-marker-alt"></i> Address:</strong>
-        <span>${place.address || 'n/a'}, ${place.postal_code || ''} ${place.city || ''}</span>
+        <span>${addressLine}</span>
     `;
 
     metaEl.innerHTML = `
@@ -591,6 +593,7 @@ function renderPlaceDetails(place) {
         distanceEl.innerHTML = `<i class="fas fa-location-arrow"></i> ${place.distance_km.toFixed(1)} km away from you`;
         distanceEl.style.display = 'block';
     } else {
+        distanceEl.innerHTML = '';
         distanceEl.style.display = 'none';
     }
 
@@ -600,6 +603,7 @@ function renderPlaceDetails(place) {
         contactEl.innerHTML = `<strong>Contact</strong>${phoneHtml}${websiteHtml}`;
         contactEl.style.display = 'block';
     } else {
+        contactEl.innerHTML = '';
         contactEl.style.display = 'none';
     }
 
@@ -608,6 +612,7 @@ function renderPlaceDetails(place) {
         hoursEl.innerHTML = `<strong>Opening hours</strong><p>${formattedHours}</p>`;
         hoursEl.style.display = 'block';
     } else {
+        hoursEl.innerHTML = '';
         hoursEl.style.display = 'none';
     }
 
@@ -616,6 +621,7 @@ function renderPlaceDetails(place) {
         ratingEl.innerHTML = `<strong>Rating</strong><p>⭐ ${place.rating}${reviews}</p>`;
         ratingEl.style.display = 'block';
     } else {
+        ratingEl.innerHTML = '';
         ratingEl.style.display = 'none';
     }
 

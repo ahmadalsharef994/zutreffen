@@ -8,9 +8,16 @@ A modern FastAPI application that helps people meet in public places across Germ
 - 📍 **Places** - Real German locations with GPS coordinates
 - ✅ **Check-ins** - See who's where right now
 - 👥 **User Profiles** - Avatars, bios, and more
-- 🗺️ **Geographic Search** - Filter by city and category
+- 🧭 **Smart Search** - Find places by name, city, or postal code (+ GPS nearby)
 - 🔒 **Protected Routes** - Secure API endpoints
 - 📚 **Interactive Docs** - Swagger UI + ReDoc
+
+## 🧩 MVP Scope
+
+- Interactive place cards with full detail modals and quick check-in
+- Unified search box covering place names, cities, and postal codes
+- GPS "Use My Location" shortcut to surface nearby spots fast
+- Core flows: authentication, check-ins, and profile editing
 
 ## 🚀 Quick Start
 
@@ -192,7 +199,7 @@ curl -X POST http://localhost:8001/api/v1/checkins/ \
 
 ## 🎯 Next Steps
 
-- [ ] Add geolocation search (nearby places)
+- [x] Add geolocation search (nearby places)
 - [ ] Add place ratings and reviews
 - [ ] Add user followers/friends
 - [ ] Add real-time notifications
